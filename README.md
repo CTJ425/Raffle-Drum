@@ -20,14 +20,16 @@ Raffle-Drum/
 │   │   └── test/         #   Vitest 測試
 │   └── frontend/         # React 18 + MUI + Vite(TypeScript)
 │       └── src/          #   components/(UI 元件)、hooks/(Socket 狀態同步)、lib/(驗證邏輯)
-├── docker/
-│   ├── docker-compose.yml
-│   ├── Dockerfile.backend
-│   ├── Dockerfile.frontend
-│   └── nginx/            # 前端容器的 nginx 設定(靜態檔 + /socket.io/ 反向代理)
-├── k8s/                  # Kubernetes 部署 YAML(raffle-system namespace)
-├── spec.md               # 專案規格書
-└── acceptance.md         # 驗收條件
+├── docs/                 # 專案文件
+│   ├── spec.md           # 專案規格書
+│   └── acceptance.md     # 驗收條件
+├── deploy/               # 部署與容器化設定
+│   ├── docker/
+│   │   ├── docker-compose.yml
+│   │   ├── Dockerfile.backend
+│   │   ├── Dockerfile.frontend
+│   │   └── nginx/        # 前端容器的 nginx 設定(靜態檔 + /socket.io/ 反向代理)
+│   └── k8s/              # Kubernetes 部署 YAML(raffle-system namespace)
 ```
 
 ### 系統架構
@@ -65,25 +67,25 @@ graph LR
 ## 快速開始(Docker Compose)
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d --build
+docker compose -f deploy/docker/docker-compose.yml up -d --build
 ```
 
 - 前端:<http://localhost:3000>(主持人加 `?role=host`)
 - 後端 API:<http://localhost:5000>(`/health`、`/api/state`)
 - 抽獎資料保存在 repo 根目錄的 `./backend-data/state.json`
 
-停止:`docker compose -f docker/docker-compose.yml down`
+停止:`docker compose -f deploy/docker/docker-compose.yml down`
 
 ## Image 建置說明
 
-兩個 image 都以 **repo 根目錄為 build context**(Dockerfile 在 `docker/` 內):
+兩個 image 都以 **repo 根目錄為 build context**(Dockerfile 在 `deploy/docker/` 內):
 
 ```bash
 # 後端:multi-stage — 先以 npm workspace 編譯 TypeScript,再組出只含 production 依賴的執行 image
-docker build -f docker/Dockerfile.backend -t raffle-backend:latest .
+docker build -f deploy/docker/Dockerfile.backend -t raffle-backend:latest .
 
 # 前端:multi-stage — Vite build 靜態檔,放進 nginx:alpine,啟動時以 envsubst 注入 BACKEND_HOST
-docker build -f docker/Dockerfile.frontend -t raffle-frontend:latest .
+docker build -f deploy/docker/Dockerfile.frontend -t raffle-frontend:latest .
 ```
 
 | Image | Base | 對外 Port | 主要環境變數 |
@@ -93,20 +95,20 @@ docker build -f docker/Dockerfile.frontend -t raffle-frontend:latest .
 
 ## Kubernetes 部署
 
-`k8s/` 內含完整 YAML,部署到 `raffle-system` namespace:
+`deploy/k8s/` 內含完整 YAML,部署到 `raffle-system` namespace:
 
 ```bash
-kubectl apply -f k8s/
+kubectl apply -f deploy/k8s/
 ```
 
 | 檔案 | 內容 |
 |------|------|
-| `namespace.yaml` | `raffle-system` namespace |
-| `backend-deployment.yaml` | 後端 Deployment(**單副本 + Recreate**,見下註)含 liveness/readiness probe |
-| `backend-pvc.yaml` | 256Mi PVC,掛載於 `/app/data` 保存 state.json |
-| `backend-service.yaml` | ClusterIP `raffle-backend-service`:5000 |
-| `frontend-deployment.yaml` | 前端 Deployment,`BACKEND_HOST=raffle-backend-service` |
-| `frontend-service.yaml` | NodePort 對外服務 |
+| `deploy/k8s/namespace.yaml` | `raffle-system` namespace |
+| `deploy/k8s/backend-deployment.yaml` | 後端 Deployment(**單副本 + Recreate**,見下註)含 liveness/readiness probe |
+| `deploy/k8s/backend-pvc.yaml` | 256Mi PVC,掛載於 `/app/data` 保存 state.json |
+| `deploy/k8s/backend-service.yaml` | ClusterIP `raffle-backend-service`:5000 |
+| `deploy/k8s/frontend-deployment.yaml` | 前端 Deployment,`BACKEND_HOST=raffle-backend-service` |
+| `deploy/k8s/frontend-service.yaml` | NodePort 對外服務 |
 
 > **註**:後端必須維持單副本 — state.json 為單一寫入者的本機檔案,且 Socket.IO 未配置共享 adapter,多副本間無法同步抽獎狀態與廣播。
 

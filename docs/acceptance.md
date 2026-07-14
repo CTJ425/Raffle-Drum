@@ -50,11 +50,11 @@
 ### 驗收步驟：
 1.  **建置並啟動服務**：
     ```bash
-    docker compose up --build -d
+    docker compose -f deploy/docker/docker-compose.yml up --build -d
     ```
 2.  **確認容器與埠口**：
     ```bash
-    docker compose ps
+    docker compose -f deploy/docker/docker-compose.yml ps
     ```
     *預期結果*：`raffle-frontend` (Port 3000) 與 `raffle-backend` (Port 5000) 狀態皆為 `Up`。
 3.  **持久化驗證測試**：
@@ -63,13 +63,13 @@
     3.  執行一次抽籤，使其產生得獎歷史紀錄（例如 `UserA` 中獎）。
     4.  **強制重啟後端服務**：
         ```bash
-        docker compose restart backend
+        docker compose -f deploy/docker/docker-compose.yml restart backend
         ```
     5.  重整瀏覽器頁面 `http://localhost:3000`。
     *預期結果*：網頁載入後，輸入框內依然保留 `UserA, UserB, UserC, UserD`，且歷史紀錄中依然留有剛才中獎的 `UserA`。這代表資料已成功透過掛載的 `state.json` 檔案持久化。
 4.  **清理環境**：
     ```bash
-    docker compose down
+    docker compose -f deploy/docker/docker-compose.yml down
     ```
 
 ---
@@ -86,8 +86,8 @@
 2.  **在本地建置 Docker 映像檔**：
     分別打包前端與後端的 Docker Image：
     ```bash
-    docker build -t raffle-frontend:latest -f Dockerfile.frontend .
-    docker build -t raffle-backend:latest -f Dockerfile.backend .
+    docker build -t raffle-frontend:latest -f deploy/docker/Dockerfile.frontend .
+    docker build -t raffle-backend:latest -f deploy/docker/Dockerfile.backend .
     ```
 3.  **將映像檔載入 Minikube**：
     ```bash
@@ -96,8 +96,8 @@
     ```
 4.  **套用 Kubernetes 部署清單**：
     ```bash
-    kubectl apply -f k8s/namespace.yaml
-    kubectl apply -f k8s/
+    kubectl apply -f deploy/k8s/namespace.yaml
+    kubectl apply -f deploy/k8s/
     ```
 5.  **檢查 Pod 與 Service 狀態**：
     ```bash
@@ -113,5 +113,5 @@
     開啟兩個分頁，重複「第一階段」的雙瀏覽器視窗同步測試，確認 K8S 內部的 WebSocket 反向代理與 Pod 網路串接完全正常。
 7.  **清理 K8S 部署**：
     ```bash
-    kubectl delete -f k8s/
+    kubectl delete -f deploy/k8s/
     ```
