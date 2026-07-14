@@ -1,0 +1,18 @@
+{
+  "name": "raffle-drum",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "src/backend",
+    "src/frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=src/backend & npm run dev --workspace=src/frontend & wait",
+    "test": "npm run test --workspace=src/backend && npm run test --workspace=src/frontend",
+    "build": "npm run build --workspace=src/backend && npm run build --workspace=src/frontend"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "esbuild@0.21.5": true
+  }
+}

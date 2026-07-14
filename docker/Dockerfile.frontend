@@ -1,0 +1,18 @@
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY src/backend/package.json src/backend/package.json
+COPY src/frontend/package.json src/frontend/package.json
+RUN npm install --workspace=src/frontend
+COPY src/frontend src/frontend
+RUN npm run build --workspace=src/frontend
+
+FROM nginx:1.27-alpine
+RUN apk add --no-cache gettext
+COPY --from=build /app/src/frontend/dist /usr/share/nginx/html
+COPY docker/nginx/default.conf.template /etc/nginx/templates/default.conf.template
+COPY docker/nginx/docker-entrypoint-raffle.sh /docker-entrypoint-raffle.sh
+RUN chmod +x /docker-entrypoint-raffle.sh
+ENV BACKEND_HOST=backend
+EXPOSE 80
+ENTRYPOINT ["/docker-entrypoint-raffle.sh"]

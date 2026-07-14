@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: raffle-frontend-deployment
+  namespace: raffle-system
+  labels:
+    app: raffle-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: raffle-frontend
+  template:
+    metadata:
+      labels:
+        app: raffle-frontend
+    spec:
+      containers:
+        - name: raffle-frontend
+          image: raffle-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: BACKEND_HOST
+              value: raffle-backend-service
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi

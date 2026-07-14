@@ -1,0 +1,29 @@
+name: raffle-drum
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: raffle-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - DATA_DIR=/app/data
+    volumes:
+      - ../backend-data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    container_name: raffle-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - BACKEND_HOST=backend
+    depends_on:
+      - backend
+    restart: unless-stopped

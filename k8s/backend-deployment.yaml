@@ -1,0 +1,59 @@
+# A single replica is required: state.json is a single-writer local file and
+# Socket.IO broadcasts in-memory (no shared adapter), so multiple backend
+# pods would neither share draw state nor sync clients with each other.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: raffle-backend-deployment
+  namespace: raffle-system
+  labels:
+    app: raffle-backend
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: raffle-backend
+  template:
+    metadata:
+      labels:
+        app: raffle-backend
+    spec:
+      containers:
+        - name: raffle-backend
+          image: raffle-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          env:
+            - name: PORT
+              value: "5000"
+            - name: DATA_DIR
+              value: /app/data
+          volumeMounts:
+            - name: raffle-data
+              mountPath: /app/data
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+      volumes:
+        - name: raffle-data
+          persistentVolumeClaim:
+            claimName: raffle-backend-pvc
