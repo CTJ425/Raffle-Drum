@@ -5,9 +5,11 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/Dockerfile.backend
+    image: raffle-backend:0.1.1
     container_name: raffle-backend
-    ports:
-      - "5000:5000"
+    # 不對主機映射 port:後端只供 frontend 容器經內部網路存取
+    expose:
+      - "5000"
     environment:
       - PORT=5000
       - DATA_DIR=/app/data
@@ -19,6 +21,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/Dockerfile.frontend
+    image: raffle-frontend:0.1.1
     container_name: raffle-frontend
     ports:
       - "3000:80"

@@ -56,8 +56,14 @@
     ```bash
     docker compose -f deploy/docker/docker-compose.yml ps
     ```
-    *預期結果*：`raffle-frontend` (Port 3000) 與 `raffle-backend` (Port 5000) 狀態皆為 `Up`。
-3.  **持久化驗證測試**：
+    *預期結果*：`raffle-frontend` (Port 3000) 與 `raffle-backend` 狀態皆為 `Up`；`raffle-backend` **沒有**任何主機 port 映射（5000 僅供容器內部網路使用）。
+3.  **確認後端未對外曝露、代理端點正常**：
+    ```bash
+    curl http://localhost:3000/health          # 預期回應 {"status":"ok"}（經 nginx 代理）
+    curl http://localhost:3000/api/state      # 預期回應 JSON 狀態
+    curl --max-time 3 http://localhost:5000/health   # 預期連線失敗（5000 未對主機開放）
+    ```
+4.  **持久化驗證測試**：
     1.  瀏覽 `http://localhost:3000/?role=host`。
     2.  輸入測試項目：`UserA, UserB, UserC, UserD`。
     3.  執行一次抽籤，使其產生得獎歷史紀錄（例如 `UserA` 中獎）。
@@ -67,7 +73,7 @@
         ```
     5.  重整瀏覽器頁面 `http://localhost:3000`。
     *預期結果*：網頁載入後，輸入框內依然保留 `UserA, UserB, UserC, UserD`，且歷史紀錄中依然留有剛才中獎的 `UserA`。這代表資料已成功透過掛載的 `state.json` 檔案持久化。
-4.  **清理環境**：
+5.  **清理環境**：
     ```bash
     docker compose -f deploy/docker/docker-compose.yml down
     ```
@@ -86,13 +92,13 @@
 2.  **在本地建置 Docker 映像檔**：
     分別打包前端與後端的 Docker Image：
     ```bash
-    docker build -t raffle-frontend:latest -f deploy/docker/Dockerfile.frontend .
-    docker build -t raffle-backend:latest -f deploy/docker/Dockerfile.backend .
+    docker build -t raffle-frontend:0.1.1 -f deploy/docker/Dockerfile.frontend .
+    docker build -t raffle-backend:0.1.1 -f deploy/docker/Dockerfile.backend .
     ```
 3.  **將映像檔載入 Minikube**：
     ```bash
-    minikube image load raffle-frontend:latest
-    minikube image load raffle-backend:latest
+    minikube image load raffle-frontend:0.1.1
+    minikube image load raffle-backend:0.1.1
     ```
 4.  **套用 Kubernetes 部署清單**：
     ```bash

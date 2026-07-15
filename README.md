@@ -38,11 +38,11 @@ Raffle-Drum/
 graph LR
     Host[主持人瀏覽器<br>?role=host] -- Socket.IO --> N[Nginx<br>frontend 容器 :80]
     V1[觀眾瀏覽器] -- Socket.IO --> N
-    N -- "/socket.io/ 反向代理" --> B[Express + Socket.IO<br>backend 容器 :5000]
+    N -- "/socket.io/、/api/、/health 反向代理" --> B[Express + Socket.IO<br>backend 容器 :5000<br>（僅內部網路）]
     B -- 讀寫 --> S[(state.json<br>Volume / PVC)]
 ```
 
-前端容器由 nginx 同時負責:靜態檔案服務(React build 產物)與 `/socket.io/` 的 WebSocket 反向代理(後端位址由環境變數 `BACKEND_HOST` 注入)。瀏覽器只需連得到前端的 port。
+前端容器由 nginx 同時負責:靜態檔案服務(React build 產物)與 `/socket.io/`(WebSocket)、`/api/`、`/health` 的反向代理(後端位址由環境變數 `BACKEND_HOST` 注入)。後端 5000 port 不對外映射,只在容器內部網路供 nginx 存取;瀏覽器只需連得到前端的 port。
 
 ## 使用方法
 
@@ -90,7 +90,8 @@ docker compose down
 ```
 
 - 前端：<http://localhost:3000> (主持人請加 `?role=host`)
-- 後端 API：<http://localhost:5000> (`/health`、`/api/state`)
+- 後端 API(經 nginx 代理)：<http://localhost:3000/health>、<http://localhost:3000/api/state>
+- 後端 5000 port **不對主機開放**,僅供 frontend 容器內部存取
 - 抽獎資料保存在 repo 根目錄的 `./backend-data/state.json`
 
 ## Image 建置說明
@@ -99,16 +100,16 @@ docker compose down
 
 ```bash
 # 後端:multi-stage — 先以 npm workspace 編譯 TypeScript,再組出只含 production 依賴的執行 image
-docker build -f deploy/docker/Dockerfile.backend -t raffle-backend:latest .
+docker build -f deploy/docker/Dockerfile.backend -t raffle-backend:0.1.1 .
 
 # 前端:multi-stage — Vite build 靜態檔,放進 nginx:alpine,啟動時以 envsubst 注入 BACKEND_HOST
-docker build -f deploy/docker/Dockerfile.frontend -t raffle-frontend:latest .
+docker build -f deploy/docker/Dockerfile.frontend -t raffle-frontend:0.1.1 .
 ```
 
-| Image | Base | 對外 Port | 主要環境變數 |
-|-------|------|-----------|--------------|
-| raffle-backend | node:20-alpine | 5000 | `PORT`、`DATA_DIR`(state.json 存放目錄) |
-| raffle-frontend | nginx:1.27-alpine | 80 | `BACKEND_HOST`(後端主機名,供 nginx 代理) |
+| Image | Base | Port | 主要環境變數 |
+|-------|------|------|--------------|
+| raffle-backend | node:20-alpine | 5000(僅容器內部,不對主機映射) | `PORT`、`DATA_DIR`(state.json 存放目錄) |
+| raffle-frontend | nginx:1.27-alpine | 80(對外映射 3000) | `BACKEND_HOST`(後端主機名,供 nginx 代理) |
 
 ## Kubernetes 部署
 
@@ -129,7 +130,7 @@ kubectl apply -f deploy/k8s/
 
 > **註**:後端必須維持單副本 — state.json 為單一寫入者的本機檔案,且 Socket.IO 未配置共享 adapter,多副本間無法同步抽獎狀態與廣播。
 
-image 需先載入叢集可見的 registry(或本機叢集如 minikube/kind 直接 load),tag 對應 YAML 中的 `raffle-backend:latest` / `raffle-frontend:latest`。
+image 需先載入叢集可見的 registry(或本機叢集如 minikube/kind 直接 load),tag 對應 YAML 中的 `raffle-backend:0.1.1` / `raffle-frontend:0.1.1`。
 
 ## 本機開發
 
