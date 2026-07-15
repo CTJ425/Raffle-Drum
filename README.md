@@ -100,10 +100,10 @@ docker compose down
 
 ```bash
 # 後端:multi-stage — 先以 npm workspace 編譯 TypeScript,再組出只含 production 依賴的執行 image
-docker build -f deploy/docker/Dockerfile.backend -t raffle-backend:0.1.1 .
+docker build -f deploy/docker/Dockerfile.backend -t ctj425/raffle-backend:0.1.1 .
 
 # 前端:multi-stage — Vite build 靜態檔,放進 nginx:alpine,啟動時以 envsubst 注入 BACKEND_HOST
-docker build -f deploy/docker/Dockerfile.frontend -t raffle-frontend:0.1.1 .
+docker build -f deploy/docker/Dockerfile.frontend -t ctj425/raffle-frontend:0.1.1 .
 ```
 
 | Image | Base | Port | 主要環境變數 |
@@ -130,7 +130,7 @@ kubectl apply -f deploy/k8s/
 
 > **註**:後端必須維持單副本 — state.json 為單一寫入者的本機檔案,且 Socket.IO 未配置共享 adapter,多副本間無法同步抽獎狀態與廣播。
 
-image 需先載入叢集可見的 registry(或本機叢集如 minikube/kind 直接 load),tag 對應 YAML 中的 `raffle-backend:0.1.1` / `raffle-frontend:0.1.1`。
+image 已發布於 Docker Hub(`ctj425/raffle-backend:0.1.1` / `ctj425/raffle-frontend:0.1.1`),叢集可直接拉取,無需手動 load;若要使用本機自建的 image,再以 `minikube image load` 載入同名 tag 即可(`imagePullPolicy: IfNotPresent` 會優先使用本機已有的 image)。
 
 ## 本機開發
 

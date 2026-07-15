@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: raffle-frontend
-          image: raffle-frontend:0.1.1
+          image: ctj425/raffle-frontend:0.1.1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

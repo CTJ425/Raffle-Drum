@@ -5,7 +5,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/Dockerfile.backend
-    image: raffle-backend:0.1.1
+    image: ctj425/raffle-backend:0.1.1
     container_name: raffle-backend
     # 不對主機映射 port:後端只供 frontend 容器經內部網路存取
     expose:
@@ -21,7 +21,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/docker/Dockerfile.frontend
-    image: raffle-frontend:0.1.1
+    image: ctj425/raffle-frontend:0.1.1
     container_name: raffle-frontend
     ports:
       - "3000:80"

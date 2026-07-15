@@ -89,16 +89,16 @@
     ```bash
     minikube start
     ```
-2.  **在本地建置 Docker 映像檔**：
+2.  **在本地建置 Docker 映像檔**（可選——image 已發布於 Docker Hub，叢集可直接拉取，步驟 2、3 僅在需要驗證本機自建 image 時執行）：
     分別打包前端與後端的 Docker Image：
     ```bash
-    docker build -t raffle-frontend:0.1.1 -f deploy/docker/Dockerfile.frontend .
-    docker build -t raffle-backend:0.1.1 -f deploy/docker/Dockerfile.backend .
+    docker build -t ctj425/raffle-frontend:0.1.1 -f deploy/docker/Dockerfile.frontend .
+    docker build -t ctj425/raffle-backend:0.1.1 -f deploy/docker/Dockerfile.backend .
     ```
 3.  **將映像檔載入 Minikube**：
     ```bash
-    minikube image load raffle-frontend:0.1.1
-    minikube image load raffle-backend:0.1.1
+    minikube image load ctj425/raffle-frontend:0.1.1
+    minikube image load ctj425/raffle-backend:0.1.1
     ```
 4.  **套用 Kubernetes 部署清單**：
     ```bash

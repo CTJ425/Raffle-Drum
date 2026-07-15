@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: raffle-backend
-          image: raffle-backend:0.1.1
+          image: ctj425/raffle-backend:0.1.1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
