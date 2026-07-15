@@ -3,7 +3,7 @@ name: raffle-drum
 services:
   backend:
     build:
-      context: ..
+      context: ../..
       dockerfile: deploy/docker/Dockerfile.backend
     container_name: raffle-backend
     ports:
@@ -17,7 +17,7 @@ services:
 
   frontend:
     build:
-      context: ..
+      context: ../..
       dockerfile: deploy/docker/Dockerfile.frontend
     container_name: raffle-frontend
     ports:

@@ -66,19 +66,36 @@ graph LR
 
 ## 快速開始(Docker Compose)
 
+專案已將 `docker-compose.yml` 中的 build context 設定為 `../..`（即專案根目錄）。因此，您不論是在**專案根目錄**下，或是切換至 **`deploy/docker/` 目錄**下，皆能順利執行 Docker Compose。
+
+**1. 在專案根目錄下執行：**
+
 ```bash
+# 啟動服務
 docker compose -f deploy/docker/docker-compose.yml up -d --build
+
+# 停止服務
+docker compose -f deploy/docker/docker-compose.yml down
 ```
 
-- 前端:<http://localhost:3000>(主持人加 `?role=host`)
-- 後端 API:<http://localhost:5000>(`/health`、`/api/state`)
-- 抽獎資料保存在 repo 根目錄的 `./backend-data/state.json`
+**2. 在 `deploy/docker/` 目錄下執行：**
 
-停止:`docker compose -f deploy/docker/docker-compose.yml down`
+```bash
+# 切換目錄並啟動服務
+cd deploy/docker
+docker compose up -d --build
+
+# 停止服務
+docker compose down
+```
+
+- 前端：<http://localhost:3000> (主持人請加 `?role=host`)
+- 後端 API：<http://localhost:5000> (`/health`、`/api/state`)
+- 抽獎資料保存在 repo 根目錄的 `./backend-data/state.json`
 
 ## Image 建置說明
 
-兩個 image 都以 **repo 根目錄為 build context**(Dockerfile 在 `deploy/docker/` 內):
+不論是透過 Docker Compose 還是手動建置，兩個 image 都必須以 **repo 根目錄為 build context** (Dockerfile 在 `deploy/docker/` 內)：
 
 ```bash
 # 後端:multi-stage — 先以 npm workspace 編譯 TypeScript,再組出只含 production 依賴的執行 image

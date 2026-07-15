@@ -48,7 +48,7 @@
 本階段驗收 Dockerfile 建置、Docker Compose 一鍵啟動，以及最關鍵的**資料持久化**（重啟容器後資料不消失）。
 
 ### 驗收步驟：
-1.  **建置並啟動服務**：
+1.  **建置並啟動服務**（可在專案根目錄執行，或切換至 `deploy/docker` 目錄執行 `docker compose up --build -d`）：
     ```bash
     docker compose -f deploy/docker/docker-compose.yml up --build -d
     ```
